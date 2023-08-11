@@ -1,0 +1,9 @@
+.cache
+.cmake
+CMakeCache.txt
+CMakeFiles
+Makefile
+cmake_install.cmake
+debug
+release
+compile_commands.json
