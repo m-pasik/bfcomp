@@ -1,3 +1,4 @@
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -218,7 +219,7 @@ int main(int argc, char **argv)
         
         /* Exif if invalid argument was provided. */
         if (!arg->option) {
-            printf("Invalid argument: %s\n", arg->opt_argv[0]);
+            fprintf(stderr, "ERROR: Invalid argument %s\n", arg->opt_argv[0]);
             exit(1);
         }
 
