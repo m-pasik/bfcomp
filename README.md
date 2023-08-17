@@ -42,7 +42,7 @@ Options:
   --assembly            -S  -- Outputs assembly instead of an executable.
 ```
 
-## Examples:
+## Examples
 
 ### Cat
 cat.bf
