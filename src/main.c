@@ -46,9 +46,9 @@ int die(const char *msg)
  */
 int help(size_t argc, char **argv)
 {
-    printf("Usage: %s [options] file\n\n", settings.program_name);
+    printf("Usage: %s [options]\n\n", settings.program_name);
     printf("Options:\n"
-           "  --help                -h  -- Displays this help.\n"
+           "  --help                -h  -- Displays help.\n"
            "  --input_file <file>   -i  -- Sets input file.\n"
            "  --output_file <file>  -o  -- Sets output file.\n"
            "  --stack_size <value>  -s  -- Sets length of the stack.\n"
@@ -314,7 +314,7 @@ int main(int argc, char **argv)
         fclose(temp_file); 
 
         /* Assemble and link executable. */
-        char nasm[] = "nasm -f elf64 %s";
+        char nasm[] = "nasm -f elf64 -w-all %s";
         char ld[] = "ld %s.o -o %s";
 
         char nasm_command[sizeof(nasm) + L_tmpnam];
