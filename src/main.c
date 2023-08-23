@@ -140,7 +140,7 @@ int input_file(size_t argc, char **argv)
 int output_file(size_t argc, char **argv)
 {
     if (!argc)
-        die("Input file not provided.");
+        die("Output file not provided.");
     if (!settings.output_file)
         settings.output_file = argv[0];
     else
