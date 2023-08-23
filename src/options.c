@@ -113,7 +113,8 @@ Option *get_option(Options *options, int type, char *key)
         /* If `type` == OPTION_SHORT searches long keys. */
         case OPTION_SHORT:
             for (int i = 0; i < options->count; i++)
-                if (options->list[i].key_short == *key)
+                if (options->list[i].key_short == *key &&
+                    *(key + 1) == '\0')
                     return &options->list[i];
             return NULL; 
 

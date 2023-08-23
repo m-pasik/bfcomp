@@ -17,6 +17,36 @@ typedef struct {
     int64_t value;
 } Instruction;
 
+#define INS_WRITE_NEEDED							\
+	if (instruction->write_needed) {				\
+		buffer->length +=							\
+			sprintf(buffer->data + buffer->length,	\
+					"mov %s [r14], %s\n",			\
+					settings.data_unit,				\
+					settings.operation_register);	\
+		instruction->write_needed = 0;				\
+	}
+
+#define INS_READ_NEEDED								\
+	if (instruction->read_needed) {					\
+		buffer->length +=							\
+			sprintf(buffer->data + buffer->length,	\
+					"mov %s, %s [r14]\n",			\
+					settings.operation_register,	\
+					settings.data_unit);			\
+		instruction->read_needed = 0;				\
+	}
+
+#define INS_INCREMENT_NEEDED						\
+	if (instruction->increment_needed) {			\
+		buffer->length +=							\
+			sprintf(buffer->data + buffer->length,	\
+					"mov r14, stack\n"				\
+					"add r14, r13\n");				\
+		instruction->increment_needed = 0;			\
+	}
+
+
 /*
  * Writes assembly equivalent to specified brainfuck instruction.
  */
@@ -24,7 +54,7 @@ void write_instruction(CompileBuffer *buffer, Instruction *instruction)
 {
     /* Make sure there is enough space in the buffer. */
     if (buffer->length + 255 > buffer->size) {
-        buffer->size += 8192;
+        buffer->size *= 2;
         buffer->data = realloc(buffer->data, buffer->size);
     }
 
@@ -34,52 +64,25 @@ void write_instruction(CompileBuffer *buffer, Instruction *instruction)
     switch (instruction->type) {
         case 1:
             /* Move stack pointer by `value`. */
-            if (instruction->write_needed) {
-                buffer->length +=
-                    sprintf(buffer->data + buffer->length,
-                            "mov %s [r13], %s\n",
-                            settings.data_unit,
-                            settings.operation_register);
-                instruction->write_needed = 0;
-                instruction->read_needed = 1;
-            }
+            INS_WRITE_NEEDED
 
-            if (instruction->value < 0) {
-                ins = "sub";
-                value = -instruction->value;
-            } else {
-                ins = "add";
-                value = instruction->value;
-            }
+            value = instruction->value + settings.stack_size;
 
             buffer->length +=
                 sprintf(buffer->data + buffer->length, 
-                        "mov rax, r12\n"
-                        "%s rax, %"PRId64"\n"
+                        "mov rax, r13\n"
+                        "add rax, %"PRId64"\n"
                         "mov rcx, %zu\n"
                         "xor rdx, rdx\n"
                         "div rcx\n"
-                        "mov r12, rdx\n",
-                        ins, value * settings.cell_size,
+                        "mov r13, rdx\n",
+                        value * settings.cell_size,
                         settings.stack_size * settings.cell_size);
             break;
         case 2:
             /* Increase value in a cell pointed to by the stack pointer by `value`. */
-            if (instruction->increment_needed) {
-                buffer->length +=
-                    sprintf(buffer->data + buffer->length,
-                            "mov r13, stack\n"
-                            "add r13, r12\n");
-                instruction->increment_needed = 0;
-            }
-
-            if (instruction->read_needed) {
-                buffer->length +=
-                    sprintf(buffer->data + buffer->length, "mov %s, %s [r13]\n",
-                            settings.operation_register,
-                            settings.data_unit);
-                instruction->read_needed = 0;
-            }
+            INS_INCREMENT_NEEDED
+            INS_READ_NEEDED
 
             if (instruction->value < 0) {
                 ins = "sub";
@@ -96,68 +99,34 @@ void write_instruction(CompileBuffer *buffer, Instruction *instruction)
             break;
         case 3:
             /* Print character in the cell pointed to by the stack pointer. */
-            if (instruction->write_needed) {
-                buffer->length +=
-                    sprintf(buffer->data + buffer->length,
-                            "mov %s [r13], %s\n",
-                            settings.data_unit,
-                            settings.operation_register);
-                instruction->write_needed = 0;
-                instruction->read_needed = 1;
-            }
-
-            if (instruction->increment_needed) {
-                buffer->length +=
-                    sprintf(buffer->data + buffer->length,
-                            "mov r13, stack\n"
-                            "add r13, r12\n");
-                instruction->increment_needed = 0;
-            }
+            INS_WRITE_NEEDED
+            INS_INCREMENT_NEEDED
 
             buffer->length +=
                 sprintf(buffer->data + buffer->length,
                         "mov rax, 1\n"
                         "mov rdi, 1\n"
-                        "mov rsi, r13\n"
+                        "mov rsi, r14\n"
                         "mov rdx, 1\n"
                         "syscall\n");
             break;
         case 4:
             /* Read character from `stdin` to the cell pointed to by the stack pointer. */
-            if (instruction->increment_needed) {
-                buffer->length +=
-                    sprintf(buffer->data + buffer->length,
-                            "mov r13, stack\n"
-                            "add r13, r12\n");
-                instruction->increment_needed = 0;
-            }
+            INS_INCREMENT_NEEDED
 
             buffer->length +=
                 sprintf(buffer->data + buffer->length,
                         "mov rax, 0\n"
                         "mov rdi, 0\n"
-                        "mov rsi, r13\n"
+                        "mov rsi, r14\n"
                         "mov rdx, 1\n"
                         "syscall\n");
                 break;
         case 5:
             /* Start loop. */
-            if (instruction->increment_needed) {
-                buffer->length +=
-                    sprintf(buffer->data + buffer->length,
-                            "mov r13, stack\n"
-                            "add r13, r12\n");
-                instruction->increment_needed = 0;
-            }
-
-            if (instruction->read_needed) {
-                buffer->length +=
-                    sprintf(buffer->data + buffer->length,
-                            "mov %s, %s [r13]\n",
-                            settings.operation_register,
-                            settings.data_unit);
-                instruction->read_needed = 0;
-            }
+            INS_WRITE_NEEDED
+            INS_INCREMENT_NEEDED
+            INS_READ_NEEDED
 
             buffer->length +=
                 sprintf(buffer->data + buffer->length,
@@ -169,22 +138,9 @@ void write_instruction(CompileBuffer *buffer, Instruction *instruction)
             break;
         case 6:
             /* End loop. */
-            if (instruction->increment_needed) {
-                buffer->length +=
-                    sprintf(buffer->data + buffer->length,
-                            "mov r13, stack\n"
-                            "add r13, r12\n");
-                instruction->increment_needed = 0;
-            }
-
-            if (instruction->read_needed) {
-                buffer->length +=
-                    sprintf(buffer->data + buffer->length,
-                            "mov %s, %s [r13]\n",
-                            settings.operation_register,
-                            settings.data_unit);
-                instruction->read_needed = 0;
-            }
+            INS_WRITE_NEEDED
+            INS_INCREMENT_NEEDED
+            INS_READ_NEEDED
 
             buffer->length +=
                 sprintf(buffer->data + buffer->length,
@@ -207,6 +163,7 @@ char *compile(char *code, char *error)
 {
     if (code == NULL) {
         *error = 1;
+        return NULL;
     }
 
     *error = 0;
@@ -220,7 +177,7 @@ char *compile(char *code, char *error)
     /*
      * Write beginning of the code to the buffer.
      * Allocates an array of size `settings.stack_size` and initializes it to 0.
-     * Initializes stack pointer `r12` to 0.
+     * Initializes stack pointer `r13` to 0.
      */
     buffer.length +=
         sprintf(buffer.data,
@@ -233,9 +190,9 @@ char *compile(char *code, char *error)
             "mov rcx, %zu\n"
             "xor %s, %s\n"
             "rep stos%c\n"
-            "xor r12, r12\n"
+            "xor r13, r13\n"
             "xor %s, %s\n"
-            "mov r13, stack\n",
+            "mov r14, stack\n",
             *settings.data_unit, settings.stack_size,
             settings.stack_size, settings.operation_register,
             settings.operation_register, *settings.data_unit,
@@ -263,6 +220,11 @@ char *compile(char *code, char *error)
         .increment_needed = 0,
         .value = 0
     };
+
+#define INS_WRITE									\
+	if (instruction.type) {							\
+		write_instruction(&buffer, &instruction);	\
+	}
     
     for ( ; *code != '\0'; ++code) {
         switch (*code) {
@@ -272,8 +234,7 @@ char *compile(char *code, char *error)
                     break;
                 }
 
-                if (instruction.type)
-                    write_instruction(&buffer, &instruction);
+                INS_WRITE
 
                 instruction.type = 1;
                 instruction.value = 1;
@@ -287,8 +248,7 @@ char *compile(char *code, char *error)
                     break;
                 }
 
-                if (instruction.type)
-                    write_instruction(&buffer, &instruction);
+                INS_WRITE
 
                 instruction.type = 1;
                 instruction.value = -1;
@@ -302,8 +262,7 @@ char *compile(char *code, char *error)
                     break;
                 }
 
-                if (instruction.type)
-                    write_instruction(&buffer, &instruction);
+                INS_WRITE
 
                 instruction.type = 2;
                 instruction.value = 1;
@@ -316,8 +275,7 @@ char *compile(char *code, char *error)
                     break;
                 }
 
-                if (instruction.type)
-                    write_instruction(&buffer, &instruction);
+                INS_WRITE
 
                 instruction.type = 2;
                 instruction.value = -1;
@@ -325,15 +283,13 @@ char *compile(char *code, char *error)
 
                 break;
             case '.': /* Print character in the cell pointed to by the stack pointer. */
-                if (instruction.type)
-                    write_instruction(&buffer, &instruction);
+                INS_WRITE
 
                 instruction.type = 3;
 
                 break;
             case ',': /* Read character from `stdin` to the cell pointed to by the stack pointer. */
-                if (instruction.type)
-                    write_instruction(&buffer, &instruction);
+                INS_WRITE
                 
                 instruction.type = 4;
                 instruction.read_needed = 1;
@@ -341,19 +297,16 @@ char *compile(char *code, char *error)
 
                 break;
             case '[': /* Start loop. */
-                if (instruction.type)
-                    write_instruction(&buffer, &instruction);
+                INS_WRITE
 
                 instruction.type = 5;
                 instruction.value = label_index;
 
                 bracket_labels[bracket_index++] = label_index++;
-
                 
                 break;
             case ']': /* End loop. */
-                if (instruction.type)
-                    write_instruction(&buffer, &instruction);
+                INS_WRITE
 
                 instruction.type = 6;
                 instruction.value = bracket_labels[--bracket_index];
@@ -363,8 +316,7 @@ char *compile(char *code, char *error)
     }
 
     /* Check if there was any brainfuck code and return error. */
-    if (instruction.type)
-        write_instruction(&buffer, &instruction);
+    INS_WRITE
     else
         *error = 2;
 

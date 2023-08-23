@@ -96,19 +96,19 @@ int cell_size(size_t argc, char **argv)
 
     switch (cell_size) {
         case 1:
-            settings.operation_register = "al";
+            settings.operation_register = "r12b";
             settings.data_unit = "byte"; 
             break;
         case 2:
-            settings.operation_register = "ax";
+            settings.operation_register = "r12w";
             settings.data_unit = "word";
             break;
         case 4:
-            settings.operation_register = "eax";
+            settings.operation_register = "r12d";
             settings.data_unit = "dword";
             break;
         case 8:
-            settings.operation_register = "rax";
+            settings.operation_register = "r12";
             settings.data_unit = "qword";
             break;
         default:

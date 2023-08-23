@@ -1,8 +1,6 @@
 # bfcomp
 Simple brainfuck compiler.
 
-### ⚠️ The compiler currently doesn't work with some programs. ⚠️
-
 ## Requirements
 - [CMake](https://cmake.org)
 - [Make](https://www.gnu.org/software/make/)
@@ -45,15 +43,15 @@ Options:
 ## Examples
 
 ### Cat
-cat.bf
+#### Code
 ```brainfuck
 +[,.]
 ```
-Compile with:
+#### Compile
 ```sh
-bfcomp -i cat.bf -o cat
+bfcomp -i examples/cat.bf -o cat
 ```
-Run:
+#### Run
 ```sh
 ./cat
 ```
@@ -61,13 +59,9 @@ Run:
 This program writes its input directly to its output.
 This program writes its input directly to its output.
 ```
-You can also get NASM with:
-```sh
-bfcomp -i cat.bf -S -o cat.asm
-```
 
-### Hello, World!
-hello.bf
+### Hello World!
+#### Code
 ```brainfuck
 +++++ +++               Set Cell #0 to 8
 [
@@ -88,11 +82,6 @@ hello.bf
     <-                  Decrement the loop Counter in Cell #0
 ]                       Loop till Cell #0 is zero
 
-The result of this is:
-Cell No :   0   1   2   3   4   5   6
-Contents:   0   0  72 104  88  32   8
-Pointer :   ^
-
 >>.                     Cell #2 has value 72 which is 'H'
 >---.                   Subtract 3 from Cell #3 to get 101 which is 'e'
 +++++ ++..+++.          Likewise for 'llo' from Cell #3
@@ -102,20 +91,65 @@ Pointer :   ^
 +++.----- -.----- ---.  Cell #3 for 'rl' and 'd'
 >>+.                    Add 1 to Cell #5 gives us an exclamation point
 >++.                    And finally a newline from Cell #6
-
 ```
-Compile with:
+#### Compile
 ```sh
-bfcomp -i hello.bf -o hello
+bfcomp -i examples/hello.bf -o hello
 ```
-Run:
+#### Run
 ```sh
 ./hello
 ```
 ```
 Hello World!
 ```
-You can also get NASM with:
+
+### Get cell size
+#### Code
+```brainfuck
+Calculate the value 256 and test if it's zero
+++++++++[>++++++++<-]>[<++++>-]
+>+<<[
+    Not zero so calculate the value 65536 and check if it's zero
+    [>++++<-]>[<++++++++>-]<[>++++++++<-]
+    >[
+        Not zero so calculate the value 4294967296 and check if it's zero
+        [<++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++              
+         +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++  
+         +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++  
+         ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++>-]
+        <[>+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++   
+         +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+         +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++   
+        +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++<-]
+        >[>
+            Print "64"
+            ++++++++[>++++++<-]>.--.[-]<
+        ]>[>
+            Print "32"
+            ++++++++++[>+++++<-]>+.-.[-]<
+        <-]<
+    ]>[>
+        Print "16"
+        +++++++[>+++++++<-]>.+++++.[-]<
+    <-<<]
+]>>[>
+    Print "8"
+    ++++++++[>+++++++<-]>.[-]<
+<-]
+
+Print " bit cells\n"
++++++++++++[>+++>+++++++++>+++++++++>+<<<<-]>-.>-.+++++++.+++++++++++.<.
+>>.++.+++++++..<-.>>->++++++++++.
+```
+#### Compile
 ```sh
-bfcomp -i hello.bf -S -o hello.asm
+bfcomp -i examples/cell_size.bf -c 8 -o cell_size
+```
+#### Run
+```sh
+./cell_size
+```
+```
+64 bit cells
 ```
