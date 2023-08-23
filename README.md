@@ -3,9 +3,11 @@ Simple brainfuck compiler.
 
 ## Requirements
 - [CMake](https://cmake.org)
-- [Make](https://www.gnu.org/software/make/)
+- [Make](https://en.wikipedia.org/wiki/Make_(software)) (such as [GNU Make](https://www.gnu.org/software/make/))
 - [C compiler](https://en.wikipedia.org/wiki/List_of_compilers#C_compilers) (such as [gcc](https://gcc.gnu.org/) or [clang](https://clang.llvm.org/))
 - [C standard library](https://en.wikipedia.org/wiki/C_standard_library) (such as [glibc](https://www.gnu.org/software/libc/))
+- [NASM](https://www.nasm.us/)
+- [GNU Linker](https://www.gnu.org/software/binutils/)
 
 ## Compile
 You can compile debug or release version by running CMake with `CMAKE_BUILD_TYPE` set to either "Debug" or "Release".
