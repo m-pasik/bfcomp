@@ -66,7 +66,7 @@ void write_instruction(CompileBuffer *buffer, Instruction *instruction)
             /* Move stack pointer by `value`. */
             INS_WRITE_NEEDED
 
-            value = instruction->value + settings.stack_size;
+            value = (instruction->value % (int64_t)settings.stack_size) + (int64_t)settings.stack_size;
 
             buffer->length +=
                 sprintf(buffer->data + buffer->length, 
