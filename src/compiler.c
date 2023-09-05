@@ -17,34 +17,34 @@ typedef struct {
     int64_t value;
 } Instruction;
 
-#define INS_WRITE_NEEDED							\
-	if (instruction->write_needed) {				\
-		buffer->length +=							\
-			sprintf(buffer->data + buffer->length,	\
-					"mov %s [r14], %s\n",			\
-					settings.data_unit,				\
-					settings.operation_register);	\
-		instruction->write_needed = 0;				\
-	}
+#define INS_WRITE_NEEDED                            \
+    if (instruction->write_needed) {                \
+        buffer->length +=                           \
+            sprintf(buffer->data + buffer->length,  \
+                    "mov %s [r14], %s\n",           \
+                    settings.data_unit,             \
+                    settings.operation_register);   \
+        instruction->write_needed = 0;              \
+    }
 
-#define INS_READ_NEEDED								\
-	if (instruction->read_needed) {					\
-		buffer->length +=							\
-			sprintf(buffer->data + buffer->length,	\
-					"mov %s, %s [r14]\n",			\
-					settings.operation_register,	\
-					settings.data_unit);			\
-		instruction->read_needed = 0;				\
-	}
+#define INS_READ_NEEDED                             \
+    if (instruction->read_needed) {                 \
+        buffer->length +=                           \
+            sprintf(buffer->data + buffer->length,  \
+                    "mov %s, %s [r14]\n",           \
+                    settings.operation_register,    \
+                    settings.data_unit);            \
+        instruction->read_needed = 0;               \
+    }
 
-#define INS_INCREMENT_NEEDED						\
-	if (instruction->increment_needed) {			\
-		buffer->length +=							\
-			sprintf(buffer->data + buffer->length,	\
-					"mov r14, stack\n"				\
-					"add r14, r13\n");				\
-		instruction->increment_needed = 0;			\
-	}
+#define INS_INCREMENT_NEEDED                        \
+    if (instruction->increment_needed) {            \
+        buffer->length +=                           \
+            sprintf(buffer->data + buffer->length,  \
+                    "mov r14, stack\n"              \
+                    "add r14, r13\n");              \
+        instruction->increment_needed = 0;          \
+    }
 
 
 /*
@@ -221,10 +221,10 @@ char *compile(char *code, char *error)
         .value = 0
     };
 
-#define INS_WRITE									\
-	if (instruction.type) {							\
-		write_instruction(&buffer, &instruction);	\
-	}
+#define INS_WRITE                                   \
+    if (instruction.type) {                         \
+        write_instruction(&buffer, &instruction);   \
+    }
     
     for ( ; *code != '\0'; ++code) {
         switch (*code) {
