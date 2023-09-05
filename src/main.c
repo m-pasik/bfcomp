@@ -45,12 +45,13 @@ int main(int argc, char **argv)
     /* Tells if output should be assembly. */
     add_option(options, "output_assembly", 'S', 0, 0, assembly);
 
-    char **args = argv + 1;
-    size_t arg_count = argc - 1;
-
     /*
      * Parse command line arguments
      */
+
+    char **args = argv + 1;
+    size_t arg_count = argc - 1;
+
     for (ArgInfo *arg = parse_argument(options, &arg_count, &args);
          arg;
          arg = parse_argument(options, &arg_count, &args)) {
