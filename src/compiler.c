@@ -162,11 +162,13 @@ void write_instruction(CompileBuffer *buffer, Instruction *instruction)
 char *compile(char *code, char *error)
 {
     if (code == NULL) {
-        *error = 1;
+        if (error)
+            *error = 1;
         return NULL;
     }
 
-    *error = 0;
+    if (error)
+        *error = 0;
 
     /* Initialize buffer for compiled code. */
     CompileBuffer buffer;
@@ -317,11 +319,11 @@ char *compile(char *code, char *error)
 
     /* Check if there was any brainfuck code and return error. */
     INS_WRITE
-    else
+    else if (error)
         *error = 2;
 
     /* Check if brackets are closed and return error. */
-    if (bracket_index)
+    if (bracket_index && error)
         *error = 3;
 
     free(bracket_labels);
