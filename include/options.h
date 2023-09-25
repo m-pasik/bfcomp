@@ -1,10 +1,7 @@
 #ifndef OPTIONS_H
 #define OPTIONS_H
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdarg.h>
-#include <string.h>
+#include <stddef.h>
 
 #define OPTION_WORD 0b00
 #define OPTION_LONG 0b01

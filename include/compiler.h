@@ -1,14 +1,11 @@
 #ifndef COMPILER_H
 #define COMPILER_H
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdint.h>
-#include <inttypes.h>
+#include <errno.h>
 
-#include "settings.h"
+#define ENOCODE 1001
+#define EUNCLOSED 1002
 
-char *compile(char *code, char* error);
+char *compile(char *code);
 
 #endif

@@ -1,3 +1,10 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdarg.h>
+#include <string.h>
+#include <errno.h>
+
+#include "defines.h"
 #include "options.h"
 
 /*
@@ -6,10 +13,12 @@
 Options *init_options()
 {
     Options *options = (Options*)malloc(sizeof(Options));
+    MEMERRN(options);
     options->count = 0;
     options->size = 100;
     options->word = NULL;
     options->list = (Option*)malloc(options->size * sizeof(Option));
+    MEMERRNF(options->list, options);
     return options;
 }
 
@@ -59,8 +68,10 @@ void add_option(Options *options, char *key, char key_short,
      * with the new function.
      */
     if (type == OPTION_WORD) {
-        if (!options->word)
+        if (!options->word) {
             options->word = (Option*)malloc(sizeof(Option));
+            MEMERRV(options->word);
+        }
 
         options->word->type = type;
         options->word->key = NULL;
@@ -78,17 +89,21 @@ void add_option(Options *options, char *key, char key_short,
      */
     if (options->count == options->size) {
         options->size += 100;
-        options->list = (Option*)realloc(options->list, options->size * sizeof(Option));
+        Option *tmp = (Option*)realloc(options->list, options->size * sizeof(Option));
+        MEMERRV(options->list)
+        options->list = tmp;
     }
 
     /* This part sets up the new option in options->list. */ 
 
     options->list[options->count].type = type; /* Do I even have to explain it? */
     
-    if (key)
+    if (key) {
         options->list[options->count].key = strdup(key);
-    else
+        MEMERRV(options->list[options->count].key)
+    } else {
         options->list[options->count].key = NULL;
+    }
 
     options->list[options->count].key_short = key_short;
     options->list[options->count].arg_min = arg_min;
@@ -139,6 +154,7 @@ ArgInfo *parse_argument(Options *options, size_t *argc, char ***argv)
         return NULL;
     
     ArgInfo *info = malloc(sizeof(ArgInfo));
+    MEMERRN(info);
 
     /* If argument doesn't start with '-' assume OPTION_WORD */
     if ((*argv)[0][0] != '-') {

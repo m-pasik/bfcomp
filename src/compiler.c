@@ -1,5 +1,13 @@
-#include "compiler.h"
+#include <asm-generic/errno-base.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <stdint.h>
+#include <inttypes.h>
+
+#include "settings.h"
+#include "defines.h"
+#include "compiler.h"
 
 /* Declare a struct for storing compiled code. */ 
 typedef struct {
@@ -55,7 +63,9 @@ void write_instruction(CompileBuffer *buffer, Instruction *instruction)
     /* Make sure there is enough space in the buffer. */
     if (buffer->length + 255 > buffer->size) {
         buffer->size *= 2;
-        buffer->data = realloc(buffer->data, buffer->size);
+        char *tmp = realloc(buffer->data, buffer->size);
+        MEMERRVF(tmp, buffer->data);
+        buffer->data = tmp;
     }
 
     char *ins;
@@ -154,27 +164,28 @@ void write_instruction(CompileBuffer *buffer, Instruction *instruction)
 }
 
 /*
- * Takes brainfuck code, returns assembly and writes any errors to `error`.
- * error == 1 if code wasn't provided.
- * error == 2 if the provided string contains no brainfuck code.
- * error == 3 if brackets were not closed.
+ * Takes brainfuck code, returns assembly and writes any errors to `errno`.
+ * errno == EINVAL if string wasn't provided.
+ * error == ENOCODE if the provided string contains no brainfuck code.
+ * error == EUNCLOSED if brackets were not closed.
+ * error == ENOMEM if memory allocation failed.
  */
-char *compile(char *code, char *error)
+char *compile(char *code)
 {
     if (code == NULL) {
-        if (error)
-            *error = 1;
+        errno = EINVAL;
         return NULL;
     }
 
-    if (error)
-        *error = 0;
+    errno = 0;
 
     /* Initialize buffer for compiled code. */
     CompileBuffer buffer;
     buffer.size = 8192;
     buffer.length = 0;
     buffer.data = malloc(buffer.size);
+
+    MEMERRN(buffer.data)
 
     /*
      * Write beginning of the code to the buffer.
@@ -226,6 +237,8 @@ char *compile(char *code, char *error)
 #define INS_WRITE                                   \
     if (instruction.type) {                         \
         write_instruction(&buffer, &instruction);   \
+        if (errno)                                  \
+            return NULL;                            \
     }
     
     for ( ; *code != '\0'; ++code) {
@@ -319,19 +332,21 @@ char *compile(char *code, char *error)
 
     /* Check if there was any brainfuck code and return error. */
     INS_WRITE
-    else if (error)
-        *error = 2;
+    else
+        errno = ENOCODE;
 
     /* Check if brackets are closed and return error. */
-    if (bracket_index && error)
-        *error = 3;
+    if (bracket_index)
+        errno = EUNCLOSED;
 
     free(bracket_labels);
 
     /* Make sure the buffer is large enough for the exit call */
     if (buffer.length + sizeof(exit_call) > buffer.size) {
         buffer.size += sizeof(exit_call);
-        buffer.data = realloc(buffer.data, buffer.size);
+        char *tmp = realloc(buffer.data, buffer.size);
+        MEMERRNF(tmp, buffer.data)
+        buffer.data = tmp;
     }
 
     /* Write exit syscall to buffer. */

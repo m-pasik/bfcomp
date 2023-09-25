@@ -91,6 +91,8 @@ int main(int argc, char **argv)
     fseek(input_file, 0, SEEK_SET);
 
     char *buffer = (char *)malloc(file_size + 1);
+    if (!buffer)
+        die("Memory allocation failed.");
 
     size_t read_size = fread(buffer, 1, file_size, input_file);
 
@@ -105,15 +107,21 @@ int main(int argc, char **argv)
      * Compile brainfuck code and check for errors.
      */
 
-    char error;
+    char *compiled = compile(buffer);
 
-    char *compiled = compile(buffer, &error);
+    int error = errno;
 
-    if (error == 2)
+    if (error == EINVAL)
+        die("Code is NULL.");
+
+    if (error == ENOCODE)
         die("File contains no brainfuck code.");
 
-    if (error == 3)
+    if (error == EUNCLOSED)
         die("Unterminated brackets.");
+
+    if (error == ENOMEM)
+        die("Memory allocation failed.");
 
     free(buffer);
 
