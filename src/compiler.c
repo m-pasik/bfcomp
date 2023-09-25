@@ -216,9 +216,6 @@ char *compile(char *code)
         "mov rdi, 0\n"
         "syscall\n";
 
-    char last = 0;
-    int64_t value;
-
     size_t c = 0;
     for (size_t i = 0; code[i] != '\0'; ++i) c+= code[i] == '[';
 

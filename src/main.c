@@ -68,7 +68,7 @@ int main(int argc, char **argv)
         free(arg);
     }
 
-    free_options(options);
+    //free_options(options);
 
     /*
      * Check if input and output files were provided.

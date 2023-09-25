@@ -14,12 +14,12 @@ You can compile debug or release version by running CMake with `CMAKE_BUILD_TYPE
 ### Debug
 ```sh
 cmake -DCMAKE_BUILD_TYPE=Debug .
-make
+cmake --build .
 ```
 ### Release
 ```sh
 cmake -DCMAKE_BUILD_TYPE=Release .
-make
+cmake --build .
 ```
 
 ## Usage
