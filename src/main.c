@@ -29,6 +29,8 @@ int main(int argc, char **argv)
      * and declare command line arguments.
      */
     Options *options = init_options();
+    if (errno)
+        die("Memory allocaiton failed.");
 
     /* Prints help */
     add_option(options, "help", 'h', 0, 0, help);
@@ -68,7 +70,7 @@ int main(int argc, char **argv)
         free(arg);
     }
 
-    //free_options(options);
+    free_options(options);
 
     /*
      * Check if input and output files were provided.

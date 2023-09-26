@@ -7,11 +7,9 @@
 #include "defines.h"
 #include "options.h"
 
-/*
- * Initializes `Options` struct. (it's pretty obvious)
- */
 Options *init_options()
 {
+    errno = 0;
     Options *options = (Options*)malloc(sizeof(Options));
     MEMERRN(options);
     options->count = 0;
@@ -22,9 +20,6 @@ Options *init_options()
     return options;
 }
 
-/*
- * Frees `Options` struct. (another useless comment)
- */
 void free_options(Options *options)
 {
     for (int i = 0; i < options->count; i++)
@@ -34,46 +29,21 @@ void free_options(Options *options)
     free(options);
 }
 
-/*
- * Adds a new `Option` to `options->list`.
- */
 void add_option(Options *options, char *key, char key_short,
                 size_t arg_min, size_t arg_max, OptionFunction function)
 {
-    /*
-     * Determines option type based on `key` and `key_short`.
-     * 
-     * OPTION_LONG will be chosen if only `key` is provided.
-     * Long options are ones starting with `--`.
-     *
-     * OPTION_SHORT will be chosen if only `key_short` is provided.
-     * Short options are ones starting with `-`.
-     *
-     * If both `key` and `key_short` are provided,
-     * `type` will be OPTION_LONG | OPTION_SHORT (0b11). 
-     *
-     * OPTION_WORD is the default type if no keys were provided.
-     * There can only be one option of that type
-     * and arguments not starting with '-' will default to it,
-     * which will result in calling the function with one argument
-     * corresponding to the command line option provided.
-     */
-
-    int type = OPTION_WORD | (key ? OPTION_LONG : 0) | (key_short ? OPTION_SHORT : 0);
+    errno = 0;
 
     /*
-     * If the function type is OPTION_WORD and a options->word
-     * is NULL assign new option to options->word.
-     * If options->word already exists, overwrite it
-     * with the new function.
+     * Assign new option to options->word if keys aren't set.
+     * If options->word already exists, overwrite it.
      */
-    if (type == OPTION_WORD) {
+    if (!key && !key_short) {
         if (!options->word) {
             options->word = (Option*)malloc(sizeof(Option));
             MEMERRV(options->word);
         }
 
-        options->word->type = type;
         options->word->key = NULL;
         options->word->key_short = 0;
         options->word->arg_min = 1;
@@ -96,8 +66,6 @@ void add_option(Options *options, char *key, char key_short,
 
     /* This part sets up the new option in options->list. */ 
 
-    options->list[options->count].type = type; /* Do I even have to explain it? */
-    
     if (key) {
         options->list[options->count].key = strdup(key);
         MEMERRV(options->list[options->count].key)
@@ -112,20 +80,17 @@ void add_option(Options *options, char *key, char key_short,
     ++options->count;
 }
 
-/*
- * Returns option by `key`.
- */
 Option *get_option(Options *options, int type, char *key)
 {
     switch (type) {
-        /* If `type` == OPTION_LONG searches long keys. */
+        /* If type == OPTION_LONG searches long keys. */
         case OPTION_LONG:
             for (int i = 0; i < options->count; i++)
                 if (strcmp(options->list[i].key, key) == 0)
                     return &options->list[i];
             return NULL;
 
-        /* If `type` == OPTION_SHORT searches long keys. */
+        /* If type == OPTION_SHORT searches long keys. */
         case OPTION_SHORT:
             for (int i = 0; i < options->count; i++)
                 if (options->list[i].key_short == *key &&
@@ -133,7 +98,7 @@ Option *get_option(Options *options, int type, char *key)
                     return &options->list[i];
             return NULL; 
 
-        /* If `type` == OPTION_WORD returns options->word. */
+        /* If type == OPTION_WORD returns options->word. */
         case OPTION_WORD:
             return options->word;
     }
@@ -141,13 +106,6 @@ Option *get_option(Options *options, int type, char *key)
     return NULL;
 }
 
-/*
- * Gets first argument in `argv`
- * updates `argc` and `argv`, and returns
- * associated function (`ArgInfo.call`),
- * passed arguments (`ArgInfo.opt_argv`)
- * and numbeber of arguments (`ArgInfo.opt_argc`).
- */
 ArgInfo *parse_argument(Options *options, size_t *argc, char ***argv)
 {
     if (*argc < 1)
@@ -174,10 +132,10 @@ ArgInfo *parse_argument(Options *options, size_t *argc, char ***argv)
             info->option = get_option(options, OPTION_SHORT, (*argv)[0] + 1);
 
         /*
-         * If option was returned update `argc` and `argv` to point to the next option,
-         * and set `info->opt_argv` to point to the first argument provided to the option.
+         * If option was returned update argc and argv to point to the next option,
+         * and set info->opt_argv to point to the first argument provided to the option.
          * Else also point to the next argument but return pointer to the invalid argument
-         * in `opt_argv` and number of arguments to the next option in `opt_argc`.
+         * in opt_argv and number of arguments to the next option in opt_argc.
          */ 
         if (info->option) {
             for (info->opt_argc = 1;

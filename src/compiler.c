@@ -9,14 +9,18 @@
 #include "defines.h"
 #include "compiler.h"
 
-/* Declare a struct for storing compiled code. */ 
+/*
+ * Struct storing compiled code.
+ */ 
 typedef struct {
     size_t size;
     size_t length;
     char *data;
 } CompileBuffer;
 
-/* Stores information about the instruction that should be written to the buffer */
+/* 
+ * Stores information about the instruction that should be written to the buffer
+ */
 typedef struct {
     char type;
     char read_needed;
@@ -57,6 +61,9 @@ typedef struct {
 
 /*
  * Writes assembly equivalent to specified brainfuck instruction.
+ *
+ * @param   buffer      CompileBuffer to write to.
+ * @param   instruction Instruction to be written.
  */
 void write_instruction(CompileBuffer *buffer, Instruction *instruction)
 {
@@ -73,7 +80,7 @@ void write_instruction(CompileBuffer *buffer, Instruction *instruction)
 
     switch (instruction->type) {
         case 1:
-            /* Move stack pointer by `value`. */
+            /* Move stack pointer by value. */
             INS_WRITE_NEEDED
 
             value = (instruction->value % (int64_t)settings.stack_size) + (int64_t)settings.stack_size;
@@ -90,7 +97,7 @@ void write_instruction(CompileBuffer *buffer, Instruction *instruction)
                         settings.stack_size * settings.cell_size);
             break;
         case 2:
-            /* Increase value in a cell pointed to by the stack pointer by `value`. */
+            /* Increase value in a cell pointed to by the stack pointer by value. */
             INS_INCREMENT_NEEDED
             INS_READ_NEEDED
 
@@ -121,7 +128,7 @@ void write_instruction(CompileBuffer *buffer, Instruction *instruction)
                         "syscall\n");
             break;
         case 4:
-            /* Read character from `stdin` to the cell pointed to by the stack pointer. */
+            /* Read character from stdin to the cell pointed to by the stack pointer. */
             INS_INCREMENT_NEEDED
 
             buffer->length +=
@@ -163,13 +170,6 @@ void write_instruction(CompileBuffer *buffer, Instruction *instruction)
     }
 }
 
-/*
- * Takes brainfuck code, returns assembly and writes any errors to `errno`.
- * errno == EINVAL if string wasn't provided.
- * error == ENOCODE if the provided string contains no brainfuck code.
- * error == EUNCLOSED if brackets were not closed.
- * error == ENOMEM if memory allocation failed.
- */
 char *compile(char *code)
 {
     if (code == NULL) {
@@ -189,8 +189,8 @@ char *compile(char *code)
 
     /*
      * Write beginning of the code to the buffer.
-     * Allocates an array of size `settings.stack_size` and initializes it to 0.
-     * Initializes stack pointer `r13` to 0.
+     * Allocates an array of size settings.stack_size and initializes it to 0.
+     * Initializes stack pointer r13 to 0.
      */
     buffer.length +=
         sprintf(buffer.data,
@@ -215,6 +215,9 @@ char *compile(char *code)
         "mov rax, 0x3c\n"
         "mov rdi, 0\n"
         "syscall\n";
+
+    char last = 0;
+    int64_t value;
 
     size_t c = 0;
     for (size_t i = 0; code[i] != '\0'; ++i) c+= code[i] == '[';
@@ -268,7 +271,7 @@ char *compile(char *code)
                 instruction.increment_needed = 1;
 
                 break;
-            case '+': /* Increase value in a cell pointed to by the stack pointer by `value`. */
+            case '+': /* Increase value in a cell pointed to by the stack pointer by value. */
                 if (instruction.type == 2) {
                     ++instruction.value;
                     break;
@@ -281,7 +284,7 @@ char *compile(char *code)
                 instruction.write_needed = 1;
 
                 break;
-            case '-': /* Decrease value in a cell pointed to by the stack pointer by `value`. */
+            case '-': /* Decrease value in a cell pointed to by the stack pointer by value. */
                 if (instruction.type == 2) {
                     --instruction.value;
                     break;
@@ -300,7 +303,7 @@ char *compile(char *code)
                 instruction.type = 3;
 
                 break;
-            case ',': /* Read character from `stdin` to the cell pointed to by the stack pointer. */
+            case ',': /* Read character from stdin to the cell pointed to by the stack pointer. */
                 INS_WRITE
                 
                 instruction.type = 4;
