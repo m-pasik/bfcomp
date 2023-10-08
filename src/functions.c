@@ -2,10 +2,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "settings.h"
 #include "functions.h"
+#include "settings.h"
 
-/* 
+/*
  * Parses string to size_t.
  * Supports decimal, hex and binary.
  */
@@ -13,7 +13,7 @@ size_t parse_size_t(char *str, char *error)
 {
     char *endptr;
     size_t num;
-    
+
     *error = 0;
 
     if (strncmp(str, "0x", 2) == 0)
@@ -23,9 +23,7 @@ size_t parse_size_t(char *str, char *error)
     else
         num = strtoul(str, &endptr, 10);
 
-    if (*endptr != '\0' && *endptr != '\n' &&
-        *endptr != '\r' && *endptr != '\t' &&
-        *endptr != ' ') 
+    if (*endptr != '\0' && *endptr != '\n' && *endptr != '\r' && *endptr != '\t' && *endptr != ' ')
         *error = 1;
 
     return num;
@@ -67,7 +65,7 @@ int stack_size(size_t argc, char **argv)
 
     char err;
     size_t stack_size = parse_size_t(argv[0], &err);
-    
+
     if (err)
         die("Stack size must be a number.");
 
@@ -93,24 +91,24 @@ int cell_size(size_t argc, char **argv)
         die("Cell size must be a number.");
 
     switch (cell_size) {
-        case 1:
-            settings.operation_register = "r12b";
-            settings.data_unit = "byte"; 
-            break;
-        case 2:
-            settings.operation_register = "r12w";
-            settings.data_unit = "word";
-            break;
-        case 4:
-            settings.operation_register = "r12d";
-            settings.data_unit = "dword";
-            break;
-        case 8:
-            settings.operation_register = "r12";
-            settings.data_unit = "qword";
-            break;
-        default:
-            die("Cell size must be 1, 2, 4 or 8 bytes.");
+    case 1:
+        settings.operation_register = "r12b";
+        settings.data_unit = "byte";
+        break;
+    case 2:
+        settings.operation_register = "r12w";
+        settings.data_unit = "word";
+        break;
+    case 4:
+        settings.operation_register = "r12d";
+        settings.data_unit = "dword";
+        break;
+    case 8:
+        settings.operation_register = "r12";
+        settings.data_unit = "qword";
+        break;
+    default:
+        die("Cell size must be 1, 2, 4 or 8 bytes.");
     }
 
     settings.cell_size = cell_size;
@@ -169,4 +167,3 @@ int file(size_t argc, char **argv)
         die("Too many files provided.");
     return 0;
 }
-

@@ -2,10 +2,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "options.h"
-#include "settings.h"
 #include "compiler.h"
 #include "functions.h"
+#include "options.h"
+#include "settings.h"
 
 int main(int argc, char **argv)
 {
@@ -57,7 +57,7 @@ int main(int argc, char **argv)
     for (ArgInfo *arg = parse_argument(options, &arg_count, &args);
          arg;
          arg = parse_argument(options, &arg_count, &args)) {
-        
+
         /* Exif if invalid argument was provided. */
         if (!arg->option) {
             fprintf(stderr, "ERROR: Invalid argument %s\n", arg->opt_argv[0]);
@@ -79,7 +79,7 @@ int main(int argc, char **argv)
         die("Input file not provided.");
     if (!settings.output_file)
         die("Output file not provided.");
-    
+
     /*
      * Read input file.
      */
@@ -133,7 +133,7 @@ int main(int argc, char **argv)
 
     if (settings.assembly) {
         /* Open output file */
-        FILE *output_file = fopen(settings.output_file, "w");    
+        FILE *output_file = fopen(settings.output_file, "w");
         if (output_file == NULL)
             die("Failed to open output file.");
 
@@ -156,12 +156,12 @@ int main(int argc, char **argv)
 
         if (temp_file == NULL)
             die("Failed to create temporary file.");
-        
+
         fprintf(temp_file, "%s", compiled);
 
         free(compiled);
 
-        fclose(temp_file); 
+        fclose(temp_file);
 
         /* Assemble and link executable. */
         char nasm[] = "nasm -f elf64 -w-all %s";
@@ -177,8 +177,10 @@ int main(int argc, char **argv)
 
         /* Remove temporary files. */
         char error = 0;
-        if (remove(temp_name)) error = 1;
-        if (remove(temp_name_o)) error = 1;
+        if (remove(temp_name))
+            error = 1;
+        if (remove(temp_name_o))
+            error = 1;
 
         if (error)
             die("Failed to remove temporary files");
@@ -186,4 +188,3 @@ int main(int argc, char **argv)
 
     return 0;
 }
-
